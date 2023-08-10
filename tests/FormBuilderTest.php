@@ -4,6 +4,7 @@ use Collective\Html\FormBuilder;
 use Collective\Html\HtmlBuilder;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Collection;
@@ -21,7 +22,7 @@ class FormBuilderTest extends PHPUnit\Framework\TestCase
     /**
      * Setup the test environment.
      */
-    public function setUp()
+    protected function setUp(): void
     {
         $this->urlGenerator = new UrlGenerator(new RouteCollection(), Request::create('/foo', 'GET'));
         $this->viewFactory = m::mock(Factory::class);
@@ -45,7 +46,7 @@ class FormBuilderTest extends PHPUnit\Framework\TestCase
     /**
      * Destroy the test environment.
      */
-    public function tearDown()
+    protected function tearDown(): void
     {
         m::close();
     }
@@ -97,6 +98,24 @@ class FormBuilderTest extends PHPUnit\Framework\TestCase
           $form4);
         $this->assertEquals('<form method="POST" action="http://localhost/foo" accept-charset="UTF-8"><input name="_method" type="hidden" value="PUT"><input name="_token" type="hidden" value="abc">',
           $form5);
+    }
+
+    public function testFormRoute()
+    {
+        $routes = new RouteCollection();
+        $routes->get('user/{id}');
+        $routes->add(new Route(['GET'], 'user/{id}', ['as' => 'user.show']));
+        $this->urlGenerator->setRoutes($routes);
+
+        $form1 = $this->formBuilder->open(['method' => 'GET', 'route' => ['user.show', 1, 'foo' => 'bar']]);
+        $form2 = $this->formBuilder->open(['method' => 'GET', 'route' => ['user.show', 'id' => 2, 'foo' => 'bar']]);
+        $form3 = $this->formBuilder->open(['method' => 'GET', 'route' => ['user.show', [3, 'foo' => 'bar']]]);
+        $form4 = $this->formBuilder->open(['method' => 'GET', 'route' => ['user.show', ['id' => 4, 'foo' => 'bar']]]);
+
+        $this->assertEquals('<form method="GET" action="http://localhost/user/1?foo=bar" accept-charset="UTF-8">', $form1);
+        $this->assertEquals('<form method="GET" action="http://localhost/user/2?foo=bar" accept-charset="UTF-8">', $form2);
+        $this->assertEquals('<form method="GET" action="http://localhost/user/3?foo=bar" accept-charset="UTF-8">', $form3);
+        $this->assertEquals('<form method="GET" action="http://localhost/user/4?foo=bar" accept-charset="UTF-8">', $form4);
     }
 
     public function testClosingForm()
@@ -650,11 +669,11 @@ class FormBuilderTest extends PHPUnit\Framework\TestCase
         $select2 = (string) $this->formBuilder->selectYear('year', 2000, 2020, null, ['id' => 'foo']);
         $select3 = (string) $this->formBuilder->selectYear('year', 2000, 2020, '2000');
 
-        $this->assertContains('<select name="year"><option value="2000">2000</option><option value="2001">2001</option>',
+        $this->assertStringContainsString('<select name="year"><option value="2000">2000</option><option value="2001">2001</option>',
           $select1);
-        $this->assertContains('<select id="foo" name="year"><option value="2000">2000</option><option value="2001">2001</option>',
+        $this->assertStringContainsString('<select id="foo" name="year"><option value="2000">2000</option><option value="2001">2001</option>',
           $select2);
-        $this->assertContains('<select name="year"><option value="2000" selected="selected">2000</option><option value="2001">2001</option>',
+        $this->assertStringContainsString('<select name="year"><option value="2000" selected="selected">2000</option><option value="2001">2001</option>',
           $select3);
     }
 
@@ -662,8 +681,8 @@ class FormBuilderTest extends PHPUnit\Framework\TestCase
     {
         $range = (string) $this->formBuilder->selectRange('dob', 1900, 2013);
 
-        $this->assertContains('<select name="dob"><option value="1900">1900</option>', $range);
-        $this->assertContains('<option value="2013">2013</option>', $range);
+        $this->assertStringContainsString('<select name="dob"><option value="1900">1900</option>', $range);
+        $this->assertStringContainsString('<option value="2013">2013</option>', $range);
     }
 
     public function testFormSelectMonth()
@@ -672,10 +691,10 @@ class FormBuilderTest extends PHPUnit\Framework\TestCase
         $month2 = (string) $this->formBuilder->selectMonth('month', '1');
         $month3 = (string) $this->formBuilder->selectMonth('month', null, ['id' => 'foo']);
 
-        $this->assertContains('<select name="month"><option value="1">January</option><option value="2">February</option>',
+        $this->assertStringContainsString('<select name="month"><option value="1">January</option><option value="2">February</option>',
           $month1);
-        $this->assertContains('<select name="month"><option value="1" selected="selected">January</option>', $month2);
-        $this->assertContains('<select id="foo" name="month"><option value="1">January</option>', $month3);
+        $this->assertStringContainsString('<select name="month"><option value="1" selected="selected">January</option>', $month2);
+        $this->assertStringContainsString('<select id="foo" name="month"><option value="1">January</option>', $month3);
     }
 
     public function testFormCheckbox()
