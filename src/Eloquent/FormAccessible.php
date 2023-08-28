@@ -72,7 +72,7 @@ trait FormAccessible
     public function getAllDateCastableAttributes(): array
     {
         $dateAttributes = array_filter(
-            array_keys($this->getCasts()), fn (string $key): bool => $this->isDateCastable($key)
+            array_keys($this->getCasts()), fn (string $key): bool => $this->isDateCastable($key) || $this->isDateCastableWithCustomFormat($key)
         );
 
         return array_unique([...$dateAttributes, ...$this->getDates()]);
