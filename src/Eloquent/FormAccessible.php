@@ -33,7 +33,12 @@ trait FormAccessible
                 $value = $this->asDateTime($value);
             }
         }
-
+        
+        // If the attribute is listed as an enum, we will return a string representation.
+        if ($this->isEnumCastable($key)) {
+            return $value;
+        }
+        
         // If the attribute has a get mutator, we will call that then return what
         // it returns as the value, which is useful for transforming values on
         // retrieval from the model to a form that is more useful for usage.
